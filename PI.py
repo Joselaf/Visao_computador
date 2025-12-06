@@ -2,7 +2,14 @@ import cv2 as cv
 import numpy as np
 from matplotlib import pyplot as plt
 import sys
+import os
 
+def folder(folder):
+   for filename in os.listdir(folder):
+         Path = os.path.join(folder,filename)
+         img = cv.imread(Path)  # lê a imagem
+         img_with_obj = find_obj(img)  # cshama a função para encontrar o objeto na imagem
+         plot_two_images(img, img_with_obj)  # plota as duas imagens lado a lado
 def find_obj(img):
    img_copy = img.copy()
    height,width = img.shape[:2]
@@ -26,27 +33,13 @@ def plot_two_images(img,img_copy):
    plt.show()
 
 def main():
-   Path = sys.argv[1]  ## caminho da imagem
-   img = cv.imread(Path)  # lê a imagem
-   img_with_obj = find_obj(img)  # chama a função para encontrar o objeto na imagem
-   plot_two_images(img, img_with_obj)  # plota as duas imagens lado a lado
-   # plt.subplot(121)
-   # plt.imshow(img)
-   # plt.title('Imagem Original')
-   # plt.axis('off')
-   # plt.subplot(122)
-   # plt.imshow(img_with_obj)
-   # plt.title('Imagem com Objeto Encontrado')
-   # plt.axis('off')
-   # plt.show()
-   # plt.waitkey(0)
-   # plt.destroyAllWindows()
-
-   # cv.rectangle(img, (5,5),(200,200),(255,0,0),3) # desenha um retângulo azul na imagem))
-   # cv.imshow('Imagem Original', img) # exibe a imagem original
-   # cv.waitKey(0) # espera uma tecla ser pressionada
-   # cv.destroyAllWindows() # fecha todas as janelas abertas pelo OpenCV
-
+   Folder_or_File = sys.argv[1]
+   if os.path.isdir(Folder_or_File):
+       folder(Folder_or_File)
+   elif os.path.isfile(Folder_or_File):
+       img = cv.imread(Folder_or_File)  # lê a imagem
+       img_with_obj = find_obj(img)  # chama a função para encontrar o objeto na imagem
+       plot_two_images(img, img_with_obj)  # plota as duas imagens lado a lado
 
 
     
