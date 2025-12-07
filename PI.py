@@ -6,8 +6,8 @@ import os
 
 def folder(folder):
    for filename in os.listdir(folder):
-         Path = os.path.join(folder,filename)
-         img = cv.imread(Path)  # lê a imagem
+         Path = os.path.join(folder,filename) # cria o caminho completo do ficheiro
+         img = cv.imread(Path)  # lê a imagem 
          img_with_obj = find_obj(img)  # cshama a função para encontrar o objeto na imagem
          plot_two_images(img, img_with_obj)  # plota as duas imagens lado a lado
 
@@ -51,6 +51,6 @@ def main():
          img = cv.imread(Folder_or_File)  # lê a imagem
          file(img)
         
-if __name__ == "__main__":
+if __name__ == "__main__": ## Verifica se o script está a ser executado diretamente
     main() # executa a secção do programa  main
 
