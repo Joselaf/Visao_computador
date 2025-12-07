@@ -18,14 +18,13 @@ def file(img):
 
 
 def find_obj(img):
-   img_copy = img.copy()
-   height,width = img.shape[:2]
-   print(height,width)
-   x_CE = width // 4
-   y_CE = height // 4
-   x_CD = x_CE + width // 2
-   Y_CD = y_CE  + height// 2
-   cv.rectangle(img_copy, (x_CE,y_CE),(x_CD, Y_CD),(255,0,0),3) # desenha um retângulo azul na imagem))
+   img_copy = img.copy() # cria uma cópia da imagem original para desenhar o retângulo
+   height,width = img.shape[:2] ## Obtém as dimensões da imagem
+   x_CE = width // 4  ## Calcula as coordenadas do canto superior esquerdo do retângulo
+   y_CE = height // 4 ## Calcula as coordenadas do canto superior esquerdo do retângulo
+   x_CD = x_CE + width // 2 ## Calcula as coordenadas do canto inferior direito do retângulo
+   Y_CD = y_CE  + height// 2 ## Calcula as coordenadas do canto inferior direito do retângulo
+   cv.rectangle(img_copy, (x_CE,y_CE),(x_CD, Y_CD),(255,0,0),3) # desenha um retângulo azul na imagem
    return img_copy
 
 
