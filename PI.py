@@ -10,6 +10,13 @@ def folder(folder):
          img = cv.imread(Path)  # lê a imagem
          img_with_obj = find_obj(img)  # cshama a função para encontrar o objeto na imagem
          plot_two_images(img, img_with_obj)  # plota as duas imagens lado a lado
+
+
+def file(img):
+   img_with_obj = find_obj(img)  # chama a função para encontrar o objeto na imagem
+   plot_two_images(img, img_with_obj)  # plota as duas imagens lado a lado
+
+
 def find_obj(img):
    img_copy = img.copy()
    height,width = img.shape[:2]
@@ -20,6 +27,7 @@ def find_obj(img):
    Y_CD = y_CE  + height// 2
    cv.rectangle(img_copy, (x_CE,y_CE),(x_CD, Y_CD),(255,0,0),3) # desenha um retângulo azul na imagem))
    return img_copy
+
 
 def plot_two_images(img,img_copy):
    plt.subplot(121)
@@ -32,22 +40,18 @@ def plot_two_images(img,img_copy):
    plt.axis('off')
    plt.show()
 
+
 def main():
+   if(len(sys.argv) != 2): ## Verifica se um argumento foi passado
+       print("Por favor, forneça o caminho de uma pasta ou arquivo de imagem como argumento.")
+       return
    Folder_or_File = sys.argv[1]
-   if os.path.isdir(Folder_or_File):
+   if os.path.isdir(Folder_or_File): ##Verifica se argumento é uma pasta
        folder(Folder_or_File)
-   elif os.path.isfile(Folder_or_File):
-       img = cv.imread(Folder_or_File)  # lê a imagem
-       img_with_obj = find_obj(img)  # chama a função para encontrar o objeto na imagem
-       plot_two_images(img, img_with_obj)  # plota as duas imagens lado a lado
-
-
-    
-
-
-
-
-
+   elif os.path.isfile(Folder_or_File): ##Verifica se argumento é um ficheiro
+         img = cv.imread(Folder_or_File)  # lê a imagem
+         file(img)
+        
 if __name__ == "__main__":
-    main() # executa a parte principal do programa "main"
+    main() # executa a secção do programa  main
 
