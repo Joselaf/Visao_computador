@@ -25,7 +25,7 @@ def find_obj(img):
    x_CD = x_CE + width // 2 ## Calcula as coordenadas do canto inferior direito do retângulo
    Y_CD = y_CE  + height// 2 ## Calcula as coordenadas do canto inferior direito do retângulo
    cv.rectangle(img_copy, (x_CE,y_CE),(x_CD, Y_CD),(255,0,0),3) ## desenha um retângulo azul na imagem
-   return img_copy
+   return img_copy ## retorna a imagem com o retângulo desenhado
 
 
 def plot_two_images(img,img_copy):
