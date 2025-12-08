@@ -53,4 +53,3 @@ def main():
         
 if __name__ == "__main__": ## Verifica se o script está a ser executado diretamente
     main() ## executa a secção do programa  main
-
