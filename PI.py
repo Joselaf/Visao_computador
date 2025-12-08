@@ -44,7 +44,7 @@ def main():
    if(len(sys.argv) != 2): ## Verifica se um argumento foi passado
        print("Por favor, forneça o caminho de uma pasta ou arquivo de imagem como argumento.")
        return
-   Folder_or_File = sys.argv[1]
+   Folder_or_File = sys.argv[1] ## Obtém o argumento passado na linha de comando
    if os.path.isdir(Folder_or_File): ##Verifica se argumento é uma pasta
        folder(Folder_or_File) ## chama a função para processar a pasta
    elif os.path.isfile(Folder_or_File): ##Verifica se argumento é um ficheiro
