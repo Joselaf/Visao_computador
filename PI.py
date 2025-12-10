@@ -4,20 +4,20 @@ from matplotlib import pyplot as plt
 import sys
 import os
 
-def folder(folder):
-   for filename in os.listdir(folder):
+def folder(folder): ## função para processar uma pasta de imagens
+   for filename in os.listdir(folder): ## itera sobre todos os ficheiros na pasta
          Path = os.path.join(folder,filename) ## cria o caminho completo do ficheiro
          img = cv.imread(Path)  ## lê a imagem 
          img_with_obj = find_obj(img)  ## chama a função para encontrar o objeto na imagem
          plot_two_images(img, img_with_obj)  ## plota as duas imagens lado a lado
 
 
-def file(img):
+def file(img): ## função para processar um ficheiro de imagem
    img_with_obj = find_obj(img)  # chama a função para encontrar o objeto na imagem
    plot_two_images(img, img_with_obj)  # plota as duas imagens lado a lado
 
 
-def find_obj(img):
+def find_obj(img): ## função para encontrar o objeto na imagem
    img_copy = img.copy() ## cria uma cópia da imagem original para desenhar o retângulo
    height,width = img.shape[:2] ## Obtém as dimensões da imagem
    x_CE = width // 4  ## Calcula as coordenadas do canto superior esquerdo do retângulo
@@ -28,7 +28,7 @@ def find_obj(img):
    return img_copy ## retorna a imagem com o retângulo desenhado
 
 
-def plot_two_images(img,img_copy):
+def plot_two_images(img,img_copy): ## função para plotar duas imagens lado a lado
    plt.subplot(121) ## Cria uma figura com duas subplots
    plt.imshow(img) ## Mostra a imagem original
    plt.title('Imagem Original') ## Adiciona um título à imagem
