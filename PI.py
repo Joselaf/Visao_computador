@@ -29,7 +29,7 @@ def plot_two_images(img,img_copy):
    plt.subplot(122)
    plt.imshow(img_copy)
    plt.title('Imagem com Objeto Encontrado')
-   plt.axis('off')
+   plt.axis('off')   
    plt.show()
 
 def main():
@@ -40,13 +40,6 @@ def main():
        img = cv.imread(Folder_or_File)  # lê a imagem
        img_with_obj = find_obj(img)  # chama a função para encontrar o objeto na imagem
        plot_two_images(img, img_with_obj)  # plota as duas imagens lado a lado
-
-
-    
-
-
-
-
 
 if __name__ == "__main__":
     main() # executa a parte principal do programa "main"
