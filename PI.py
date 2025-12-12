@@ -6,27 +6,42 @@ import os
 
 def folder(folder): ## função para processar uma pasta de imagens
    for filename in os.listdir(folder): ## itera sobre todos os ficheiros na pasta
-         Path = os.path.join(folder,filename) ## cria o caminho completo do ficheiro
-         img = cv.imread(Path)  ## lê a imagem 
-         img_with_obj = find_obj(img)  ## chama a função para encontrar o objeto na imagem
-         plot_two_images(img, img_with_obj)  ## plota as duas imagens lado a lado
+      route = os.path.join(folder,filename) ## cria o caminho completo do ficheiro
+      img = cv.imread(route)  ## lê a imagem 
+      img_with_obj = count_objects(img)  ## chama a função para encontrar o objeto na imagem
+      plot_two_images(img, img_with_obj)  ## plota as duas imagens lado a lado
 
 
 def file(img): ## função para processar um ficheiro de imagem
-   img_with_obj = find_obj(img)  # chama a função para encontrar o objeto na imagem
-   plot_two_images(img, img_with_obj)  # plota as duas imagens lado a lado
+   img_with_obj = count_objects(img)  ## chama a função para encontrar o objeto na imagem
+   plot_two_images(img, img_with_obj)  ## plota as duas imagens lado a lado
 
+def count_objects(img): ## função para contar o número de objetos
+   gray =cv.fastNlMeansDenoising(cv.cvtColor(img, cv.COLOR_BGR2GRAY)) ## passa imagem para tons de cizento
+   img_bw = cv.threshold(gray, 55, 255, cv.THRESH_BINARY)[1] ## aplica um treshold à imagem 
+   kernel = np.ones((3,3),np.uint8) ## criação de um kernel 
+   img_bw = cv.morphologyEx(img_bw, cv.MORPH_OPEN, kernel) ## aplica um processo morfológico de abertura à imagem 
+   img_bw = cv.morphologyEx(img_bw, cv.MORPH_CLOSE, kernel)## aplica um processo morfológico de fecho à imagem 
+   img_bw = cv.erode(img_bw, kernel, iterations=1) ## aplica erosão à imagem 
+   num_labels, labels, stats, centroids = cv.connectedComponentsWithStats(img_bw, 8, cv.CV_32S)  ## extrai da imagem informção pertinente
+   for i in range(1, num_labels):
+      x = stats[i, cv.CC_STAT_LEFT] 
+      y = stats[i, cv.CC_STAT_TOP]
+      w = stats[i, cv.CC_STAT_WIDTH]
+      h = stats[i, cv.CC_STAT_HEIGHT]
+      area = stats[i, cv.CC_STAT_AREA]
+      (cx, cy) = centroids[i]
+      cv.circle(img, (int(cx), int(cy)), 3, (0, 0, 0), -1)
+      ##cv.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 2)
+      ##cv.putText(img, f'Area: {area}', (x, y), cv.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
+   print(num_labels)
+   return (img)
+       
+       
 
-def find_obj(img): ## função para encontrar o objeto na imagem
-   img_copy = img.copy() ## cria uma cópia da imagem original para desenhar o retângulo
-   height,width = img.shape[:2] ## Obtém as dimensões da imagem
-   x_CE = width // 4  ## Calcula as coordenadas do canto superior esquerdo do retângulo
-   y_CE = height // 4 ## Calcula as coordenadas do canto superior esquerdo do retângulo
-   x_CD = x_CE + width // 2 ## Calcula as coordenadas do canto inferior direito do retângulo
-   Y_CD = y_CE  + height// 2 ## Calcula as coordenadas do canto inferior direito do retângulo
-   cv.rectangle(img_copy, (x_CE,y_CE),(x_CD, Y_CD),(255,0,0),3) ## desenha um retângulo azul na imagem
-   return img_copy ## retorna a imagem com o retângulo desenhado
-
+def stats_obj(img): ## função para encontrar o objeto na imagem e retornar a imagem com o objeto encontrado
+    
+    count_objects(img)  ## chama a função para contar o número de objetos
 
 def plot_two_images(img,img_copy): ## função para plotar duas imagens lado a lado
    plt.subplot(121) ## Cria uma figura com duas subplots
@@ -34,10 +49,13 @@ def plot_two_images(img,img_copy): ## função para plotar duas imagens lado a l
    plt.title('Imagem Original') ## Adiciona um título à imagem
    plt.axis('off') ## Remove os eixos da imagem
    plt.subplot(122) ## Seleciona a segunda subplot
-   plt.imshow(img_copy) ## Mostra a imagem com o objeto encontrado
+   plt.imshow(img_copy,cmap='gray') ## Mostra a imagem com o objeto encontrado
    plt.title('Imagem com Objeto Encontrado') ## Adiciona um título à imagem
    plt.axis('off') ## Remove os eixos da imagem
    plt.show() ## Exibe as duas imagens lado a lado
+   cv.waitKey(0)
+   cv.destroyAllWindows()
+   return
 
 
 def main():
