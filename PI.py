@@ -19,12 +19,12 @@ def file(img): ## função para processar um ficheiro de imagem
 def count_objects(img): ## função para contar o número de objetos
    gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY) ## passa imagem para tons de cizento
    gray = cv.GaussianBlur(gray,(5,5), 0)
-   img_bw = cv.threshold(gray, 50, 255, cv.THRESH_BINARY, cv.THRESH_OTSU)[1] ## aplica um treshold à imagem
-   kernel = np.ones((5,5), np.uint8)
-   img_bw = cv.morphologyEx(img_bw, cv.MORPH_ERODE, kernel)
-   num_labels, labels, stats, centroids = cv.connectedComponentsWithStats(img_bw, 8, cv.CV_32S)
-   print(num_labels-1)
-   return (img_bw)
+   img_bw = cv.threshold(gray, 50, 255, cv.THRESH_BINARY, cv.THRESH_OTSU)[1] ## aplica um treshold à imagem, tornando-a preta e branca
+   kernel = np.ones((5,5), np.uint8) ##criação de um kernel com 1 5*5
+   img_bw = cv.morphologyEx(img_bw, cv.MORPH_ERODE, kernel)  ## aplica uma erosão à imagem 
+   num_labels, labels, stats, centroids = cv.connectedComponentsWithStats(img_bw, 8, cv.CV_32S) ## retira da imagem informações importantes
+   print(num_labels-1)  ## número de objetos encontardos na imagem.
+   return (img_bw) ##retorna a imagem denoised
        
 
 def plot_two_images(img,img2): ## função para plotar duas imagens lado a lado
