@@ -15,22 +15,25 @@ M_area = 0
 m_area = 0
 obj_M_area = 0
 obj_m_area = 0
+num_labels = 0
+labels = []
+stats = []
+centroids = []
 
 
 def count_objects(img): ## função para contar o número de objetos
-   img_copy = img
+   img_copy = img.copy()
    gray = cv.cvtColor(img_copy, cv.COLOR_BGR2GRAY) ## passa imagem para tons de cizento
    gray = cv.GaussianBlur(gray,(5,5), 0) ## aplicamos a função para suavizar a imagem
    img_bw = cv.threshold(gray, 50, 255, cv.THRESH_BINARY, cv.THRESH_OTSU)[1] ## aplica um treshold à imagem
    kernel = np.ones((5,5), np.uint8) ## criação de um kernel 
    img_bw = cv.morphologyEx(img_bw, cv.MORPH_ERODE, kernel) ## aplica por úçtimo uma erosão á imagem 
-   num_labels, labels, stats, centroids = cv.connectedComponentsWithStats(img_bw, 8, cv.CV_32S)
+   num_labels, labels, stats, centroids = cv.connectedComponentsWithStats(img_bw, 8, cv.CV_32S) 
    for i in range(1, num_labels):
       (cx,cy) = centroids[i]
-      ##mask = np.zeros_like(img_bw, np.uint8)
-      ##mask[labels == i] = 255
-      ##contours, hierarchy = cv.findContours(mask, cv.RETR_TREE, cv.CHAIN_APPROX_NONE)
-      ##perimetro = cv.arcLength(contours[0], closed=True)
+      mask = (labels == i).astype(np.uint8) * 255
+      contours, _ = cv.findContours(mask, cv.RETR_TREE, cv.CHAIN_APPROX_NONE)
+      perimetro = cv.arcLength(contours[0], closed=True)
       x = stats[i, cv.CC_STAT_LEFT]
       y = stats[i, cv.CC_STAT_TOP]
       w = stats[i, cv.CC_STAT_WIDTH]
@@ -46,11 +49,11 @@ def count_objects(img): ## função para contar o número de objetos
       elif(area > M_area):
          M_area = area
          obj_M_area = i
-      ##cv.rectangle(img_copy, (x, y), (x + w, y + h), (0, 255, 255), 3)
-      ##cv.putText(img_copy, ".", (int(cx), int(cy)), cv.FONT_HERSHEY_DUPLEX, 1, (255, 0, 255), 12)
-      ##cv.putText(img_copy, f"A:{area}", (int(cx), int(cy)-50), cv.FONT_HERSHEY_COMPLEX, 1, (255, 255, 0), 0)
-      ##cv.putText(img_copy, f"P: {perimetro}", (int(cx), int(cy)-100), cv.FONT_HERSHEY_COMPLEX , 1, (255, 255, 0), 0)
-   ##plot_two_images(img, gray)    
+      cv.rectangle(img_copy, (x, y), (x + w, y + h), (0, 255, 255), 3)
+      cv.putText(img_copy, ".", (int(cx), int(cy)), cv.FONT_HERSHEY_DUPLEX, 1, (255, 0, 255), 12)
+      cv.putText(img_copy, f"A:{area}", (int(cx), int(cy)-50), cv.FONT_HERSHEY_COMPLEX, 1, (255, 255, 0), 0)
+      cv.putText(img_copy, f"P: {perimetro}", (int(cx), int(cy)-100), cv.FONT_HERSHEY_COMPLEX , 1, (255, 255, 0), 0)
+   ##plot_two_images(img_copy, gray)    
    return(num_labels-1)
 
 
