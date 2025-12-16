@@ -13,23 +13,24 @@ pecas_naodefinidas = 0
 pecas_redondas = 0
 M_area = 0
 m_area = 0
-obj_M_area = (0,0)
-obj_m_area =(0,0)
+obj_M_area = 0
+obj_m_area = 0
 
 
 def count_objects(img): ## função para contar o número de objetos
-   gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY) ## passa imagem para tons de cizento
+   img_copy = img
+   gray = cv.cvtColor(img_copy, cv.COLOR_BGR2GRAY) ## passa imagem para tons de cizento
    gray = cv.GaussianBlur(gray,(5,5), 0) ## aplicamos a função para suavizar a imagem
    img_bw = cv.threshold(gray, 50, 255, cv.THRESH_BINARY, cv.THRESH_OTSU)[1] ## aplica um treshold à imagem
    kernel = np.ones((5,5), np.uint8) ## criação de um kernel 
    img_bw = cv.morphologyEx(img_bw, cv.MORPH_ERODE, kernel) ## aplica por úçtimo uma erosão á imagem 
    num_labels, labels, stats, centroids = cv.connectedComponentsWithStats(img_bw, 8, cv.CV_32S)
    for i in range(1, num_labels):
-      (cx, cy) = centroids[i]
-      mask = np.zeros_like(img_bw, np.uint8)
-      mask[labels == i] = 255
-      contours, hierarchy = cv.findContours(mask, cv.RETR_TREE, cv.CHAIN_APPROX_NONE)
-      perimetro = cv.arcLength(contours[0], closed=True)
+      (cx,cy) = centroids[i]
+      ##mask = np.zeros_like(img_bw, np.uint8)
+      ##mask[labels == i] = 255
+      ##contours, hierarchy = cv.findContours(mask, cv.RETR_TREE, cv.CHAIN_APPROX_NONE)
+      ##perimetro = cv.arcLength(contours[0], closed=True)
       x = stats[i, cv.CC_STAT_LEFT]
       y = stats[i, cv.CC_STAT_TOP]
       w = stats[i, cv.CC_STAT_WIDTH]
@@ -37,34 +38,37 @@ def count_objects(img): ## função para contar o número de objetos
       area = stats[i, cv.CC_STAT_AREA]
       M_area = area
       m_area = area
-      obj_M_area = centroids[i]
-      obj_m_area = centroids[i]
+      obj_M_area = i
+      obj_m_area = i
       if(area < m_area):
          m_area = area
-         obj_m_area = (x, y)
+         obj_m_area = i
       elif(area > M_area):
          M_area = area
-         obj_M_area = (x, y)
-      cv.rectangle(img, (x, y), (x + w, y + h), (0, 255, 255), 3)
-   plot_two_images(img, gray)    
+         obj_M_area = i
+      ##cv.rectangle(img_copy, (x, y), (x + w, y + h), (0, 255, 255), 3)
+      ##cv.putText(img_copy, ".", (int(cx), int(cy)), cv.FONT_HERSHEY_DUPLEX, 1, (255, 0, 255), 12)
+      ##cv.putText(img_copy, f"A:{area}", (int(cx), int(cy)-50), cv.FONT_HERSHEY_COMPLEX, 1, (255, 255, 0), 0)
+      ##cv.putText(img_copy, f"P: {perimetro}", (int(cx), int(cy)-100), cv.FONT_HERSHEY_COMPLEX , 1, (255, 255, 0), 0)
+   ##plot_two_images(img, gray)    
    return(num_labels-1)
 
 
 def Red_obj(img):
    img_HSV = cv.cvtColor(img, cv.COLOR_BGR2HSV) ##passa a para HSV a imagem 
-   ## Defenimos os intervalos do vermelho
+   ## defenimos os intervalos do vermelho
    lower_red1  = np.array([0, 120, 70])
    lower_red2  = np.array([170, 120, 70])
    upper_red1  = np.array([10, 255, 255])
    upper_red2  = np.array([180, 255, 255])
-   ##Criamos as máscara
+   ## criamos as máscara
    mask1 = cv.inRange(img_HSV, lower_red1, upper_red1)
    mask2 = cv.inRange(img_HSV, lower_red2, upper_red2)
-   ##combinamos as máscaras
+   ## combinamos as máscaras
    red_mask = cv.bitwise_or(mask1, mask2)
-   ##aplicamos a máscara para extrair a cor
+   ## aplicamos a máscara para extrair a cor
    result = cv.bitwise_and(img_HSV, img_HSV, mask=red_mask)
-   ##cv.imshow("img",result)
+   ## cv.imshow("img",result)
    return (count_objects(result))
 
 
@@ -87,7 +91,7 @@ def Blue_obj(img):
 
 def White_obj(img):
    img_HSV = cv.cvtColor(img, cv.COLOR_BGR2HSV) ##passa a para HSV a imagem 
-   ## Defenimos os intervalos do vermelho
+   ## Defenimos os intervalos do branco
    lower_white1 = np.array([0, 0, 240])
    upper_white1 = np.array([179, 15, 255])
    lower_white2 = np.array([0, 0, 200])
@@ -102,6 +106,11 @@ def White_obj(img):
    ##cv.imshow("img",result)
    return (count_objects(result))
 
+def Round_obj(img):
+   gray2 = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
+   gray2 = cv.medianBlur(gray2, 5)
+   circles = cv.HoughCircles(gray2, cv.HOUGH_GRADIENT_ALT, 1, 20, 50, 30, 0, 0)
+   return(len(circles))
 
 
 def plot_two_images(img,img2): ## função para plotar duas imagens lado a lado
@@ -111,7 +120,7 @@ def plot_two_images(img,img2): ## função para plotar duas imagens lado a lado
    plt.axis('off') ## Remove os eixos da imagem
    plt.subplot(122) ## Seleciona a segunda subplot
    plt.imshow(img2, cmap='grey') ## Mostra a imagem com o objeto encontrado
-   plt.title('Imagem com Objeto Encontrado') ## Adiciona um título à imagem
+   plt.title('Objeto Encontrado') ## Adiciona um título à imagem
    plt.axis('off') ## Remove os eixos da imagem
    plt.show() ## Exibe as duas imagens lado a lado
    cv.waitKey(0)
@@ -131,6 +140,7 @@ def file(img): ## função para processar um ficheiro de imagem
    pecas_vermelhas = Red_obj(img)
    pecas_azuis = Blue_obj(img)
    pecas_brancas = White_obj(img)
+   pecas_redondas =Round_obj(img)
    img_caracteristics = Image.new('RGB', (800, 600), color=(255, 255, 2555))
    img_caracteristics.save = ("Caractwerisitcas.png", 'PNG')
    img2 = np.array(img_caracteristics)
