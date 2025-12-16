@@ -54,6 +54,22 @@ def Blue_obj(img):
    cv.imshow("img",result)
    count_objects(result)
 
+def White_obj(img):
+   img_HSV = cv.cvtColor(img, cv.COLOR_BGR2HSV) ##passa a para HSV a imagem 
+   ## Defenimos os intervalos do vermelho
+   lower_white1 = np.array([0, 0, 240])
+   upper_white1 = np.array([179, 15, 255])
+   lower_white2 = np.array([0, 0, 200])
+   upper_white2 = np.array([179, 40, 255])
+   ##Criamos as máscara
+   mask1 = cv.inRange(img_HSV, lower_white1, upper_white1)
+   mask2 = cv.inRange(img_HSV, lower_white2, upper_white2)
+   ##combinamos as máscaras
+   white_mask = cv.bitwise_or(mask1, mask2)
+   ##aplicamos a máscara para extrair a cor
+   result = cv.bitwise_and(img_HSV, img_HSV, mask=white_mask)
+   cv.imshow("img",result)
+   count_objects(result)
 
 def plot_two_images(img,img2): ## função para plotar duas imagens lado a lado
    plt.subplot(121) ## Cria uma figura com duas subplots
@@ -79,7 +95,7 @@ def folder(folder): ## função para processar uma pasta de imagens
 
 def file(img): ## função para processar um ficheiro de imagem
    img2 = count_objects(img)  ## chama a função para encontrar o objeto na imagem
-   Blue_obj(img)
+   White_obj(img)
    plot_two_images(img, img2)  ## plota as duas imagens lado a lado
 
 
