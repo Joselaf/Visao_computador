@@ -1,8 +1,20 @@
 import cv2 as cv
 import numpy as np
 from matplotlib import pyplot as plt
+from PIL import Image
 import sys
 import os
+
+pecas_totais = 0
+pecas_vermelhas = 0
+pecas_azuis = 0
+pecas_brancas = 0
+pecas_naodefinidas = 0
+pecas_redondas = 0
+M_area = 0
+m_area = 0
+obj_M_area = (0,0)
+obj_m_area =(0,0)
 
 
 def count_objects(img): ## função para contar o número de objetos
@@ -10,13 +22,32 @@ def count_objects(img): ## função para contar o número de objetos
    gray = cv.GaussianBlur(gray,(5,5), 0) ## aplicamos a função para suavizar a imagem
    img_bw = cv.threshold(gray, 50, 255, cv.THRESH_BINARY, cv.THRESH_OTSU)[1] ## aplica um treshold à imagem
    kernel = np.ones((5,5), np.uint8) ## criação de um kernel 
-   img_bw = cv.morphologyEx(img_bw, cv.MORPH_ERODE, kernel) 
+   img_bw = cv.morphologyEx(img_bw, cv.MORPH_ERODE, kernel) ## aplica por úçtimo uma erosão á imagem 
    num_labels, labels, stats, centroids = cv.connectedComponentsWithStats(img_bw, 8, cv.CV_32S)
    for i in range(1, num_labels):
-      area = stats[i, cv.CC_STAT_AREA]
       (cx, cy) = centroids[i]
-   print(num_labels - 1)
-   return (img_bw)
+      mask = np.zeros_like(img_bw, np.uint8)
+      mask[labels == i] = 255
+      contours, hierarchy = cv.findContours(mask, cv.RETR_TREE, cv.CHAIN_APPROX_NONE)
+      perimetro = cv.arcLength(contours[0], closed=True)
+      x = stats[i, cv.CC_STAT_LEFT]
+      y = stats[i, cv.CC_STAT_TOP]
+      w = stats[i, cv.CC_STAT_WIDTH]
+      h = stats[i, cv.CC_STAT_HEIGHT]
+      area = stats[i, cv.CC_STAT_AREA]
+      M_area = area
+      m_area = area
+      obj_M_area = centroids[i]
+      obj_m_area = centroids[i]
+      if(area < m_area):
+         m_area = area
+         obj_m_area = (x, y)
+      elif(area > M_area):
+         M_area = area
+         obj_M_area = (x, y)
+      cv.rectangle(img, (x, y), (x + w, y + h), (0, 255, 255), 3)
+   plot_two_images(img, gray)    
+   return(num_labels-1)
 
 
 def Red_obj(img):
@@ -33,8 +64,8 @@ def Red_obj(img):
    red_mask = cv.bitwise_or(mask1, mask2)
    ##aplicamos a máscara para extrair a cor
    result = cv.bitwise_and(img_HSV, img_HSV, mask=red_mask)
-   cv.imshow("img",result)
-   count_objects(result)
+   ##cv.imshow("img",result)
+   return (count_objects(result))
 
 
 def Blue_obj(img):
@@ -51,8 +82,8 @@ def Blue_obj(img):
    blue_mask = cv.bitwise_or(mask1, mask2)
    ##aplicamos a máscara para extrair a cor
    result = cv.bitwise_and(img_HSV, img_HSV, mask=blue_mask)
-   cv.imshow("img",result)
-   count_objects(result)
+   ##cv.imshow("img",result)
+   return (count_objects(result))
 
 def White_obj(img):
    img_HSV = cv.cvtColor(img, cv.COLOR_BGR2HSV) ##passa a para HSV a imagem 
@@ -68,8 +99,10 @@ def White_obj(img):
    white_mask = cv.bitwise_or(mask1, mask2)
    ##aplicamos a máscara para extrair a cor
    result = cv.bitwise_and(img_HSV, img_HSV, mask=white_mask)
-   cv.imshow("img",result)
-   count_objects(result)
+   ##cv.imshow("img",result)
+   return (count_objects(result))
+
+
 
 def plot_two_images(img,img2): ## função para plotar duas imagens lado a lado
    plt.subplot(121) ## Cria uma figura com duas subplots
@@ -90,13 +123,25 @@ def folder(folder): ## função para processar uma pasta de imagens
       route = os.path.join(folder,filename) ## cria o caminho completo do ficheiro
       img = cv.imread(route)  ## lê a imagem 
       img_with_obj = count_objects(img)  ## chama a função para encontrar o objeto na imagem
-      plot_two_images(img, img_with_obj)  ## plota as duas imagens lado a lado
+      ##plot_two_images(img, img_with_obj)  ## plota as duas imagens lado a lado
 
 
 def file(img): ## função para processar um ficheiro de imagem
-   img2 = count_objects(img)  ## chama a função para encontrar o objeto na imagem
-   White_obj(img)
-   plot_two_images(img, img2)  ## plota as duas imagens lado a lado
+   pecas_totais = count_objects(img)  ## chama a função para encontrar o objeto na imagem
+   pecas_vermelhas = Red_obj(img)
+   pecas_azuis = Blue_obj(img)
+   pecas_brancas = White_obj(img)
+   img_caracteristics = Image.new('RGB', (800, 600), color=(255, 255, 2555))
+   img_caracteristics.save = ("Caractwerisitcas.png", 'PNG')
+   img2 = np.array(img_caracteristics)
+   cv.putText(img2,"pecas totais:" + str(pecas_totais), (0, 110),cv.FONT_HERSHEY_COMPLEX,1,(0, 0, 0), 1)
+   cv.putText(img2,"pecas vermelhas:" + str(pecas_vermelhas), (0, 190),cv.FONT_HERSHEY_COMPLEX,1,(0, 0, 0), 1)
+   cv.putText(img2,"pecas azuis:" + str(pecas_azuis), (0, 270),cv.FONT_HERSHEY_COMPLEX,1,(0, 0, 0), 1)
+   cv.putText(img2,"pecas brancas:" + str(pecas_brancas), (0, 350),cv.FONT_HERSHEY_COMPLEX,1,(0, 0, 0), 1)
+   cv.putText(img2,"pecas redondas:" + str(pecas_redondas), (0, 430),cv.FONT_HERSHEY_COMPLEX,1,(0, 0, 0), 1)
+   cv.putText(img2,"pecas nao defenidas:" + str(pecas_naodefinidas), (0, 510),cv.FONT_HERSHEY_COMPLEX,1,(0, 0, 0), 1)
+   plot_two_images(img, img2)
+   ##print("peças_totais:" + str(pecas_totais) +'\n' +"peças_vermelhas:" + str(pecas_vermelhas)+'\n' + "peças_azuis:" + str(pecas_azuis) + '\n' + "peças_bramcas:" + str(pecas_brancas) + '\n' + "peças_não_defenidas:" + str(pecas_naodefinidas))
 
 
 def main():
