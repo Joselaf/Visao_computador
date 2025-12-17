@@ -145,11 +145,6 @@ def White_obj(img):
    ##cv.imshow("img",result)
    return (count_objects(result)[1])
 
-def Round_obj(img):
-   gray2 = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
-   gray2 = cv.medianBlur(gray2, 5)
-   circles = cv.HoughCircles(gray2, cv.HOUGH_GRADIENT_ALT, 1, 20, 50, 30, 0, 0)
-   return(len(circles))
 
 def build_objects_table(objects_info):
    if not objects_info:
