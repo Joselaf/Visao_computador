@@ -200,7 +200,8 @@ def file(img): ## função para processar um ficheiro de imagem
    pecas_vermelhas = Red_obj(img)
    pecas_azuis = Blue_obj(img)
    pecas_brancas = White_obj(img)
-   img_caracteristics = Image.new('RGB', (800, 600), color=(255, 255, 2555))
+   pecas_naodefinidas = pecas_totais - pecas_vermelhas - pecas_azuis - pecas_brancas 
+   img_caracteristics = Image.new('RGB', (800, 600), color=(255, 255, 255))
    img_caracteristics.save = ("Caractwerisitcas.png", 'PNG')
    img2 = np.array(img_caracteristics)
    cv.putText(img2,"pecas totais:" + str(pecas_totais), (0, 110),cv.FONT_HERSHEY_COMPLEX,1,(0, 0, 0), 1)
