@@ -11,10 +11,6 @@ pecas_azuis = 0
 pecas_brancas = 0
 pecas_naodefinidas = 0
 pecas_redondas = 0
-M_area = 0
-m_area = 0
-obj_M_area = 0
-obj_m_area = 0
 num_labels = 0
 labels = []
 stats = []
@@ -25,36 +21,68 @@ def count_objects(img): ## função para contar o número de objetos
    img_copy = img.copy()
    gray = cv.cvtColor(img_copy, cv.COLOR_BGR2GRAY) ## passa imagem para tons de cizento
    gray = cv.GaussianBlur(gray,(5,5), 0) ## aplicamos a função para suavizar a imagem
+   gray_for_circles = cv.medianBlur(gray, 5)  ## suaviza para detetar círculos
    img_bw = cv.threshold(gray, 50, 255, cv.THRESH_BINARY, cv.THRESH_OTSU)[1] ## aplica um treshold à imagem
    kernel = np.ones((5,5), np.uint8) ## criação de um kernel 
    img_bw = cv.morphologyEx(img_bw, cv.MORPH_ERODE, kernel) ## aplica por úçtimo uma erosão á imagem 
-   num_labels, labels, stats, centroids = cv.connectedComponentsWithStats(img_bw, 8, cv.CV_32S) 
+   circles = cv.HoughCircles(gray_for_circles, cv.HOUGH_GRADIENT_ALT, 1, 20, 50, 30, 0, 0)
+   round_count = 0 if circles is None else len(circles[0])
+   num_labels, labels, stats, centroids = cv.connectedComponentsWithStats(img_bw, 8, cv.CV_32S)
+   objects_info = []
+   M_area = 0
+   m_area = float("inf")
+   obj_M_area = 1
+   obj_m_area = 1
    for i in range(1, num_labels):
       (cx,cy) = centroids[i]
       mask = (labels == i).astype(np.uint8) * 255
-      contours, _ = cv.findContours(mask, cv.RETR_TREE, cv.CHAIN_APPROX_NONE)
+      contours, hierarchy = cv.findContours(mask, cv.RETR_CCOMP, cv.CHAIN_APPROX_SIMPLE)
       perimetro = cv.arcLength(contours[0], closed=True)
+      area = stats[i, cv.CC_STAT_AREA]
+      circularity = 0.0
+      is_round = False
+      if perimetro > 0:
+         circularity = (4 * np.pi * area) / (perimetro ** 2)
+         is_round = circularity >= 0.75
+      if hierarchy is not None and len(hierarchy) > 0:
+         # holes are child contours of the outer contour (parent == 0)
+         holes = max(int(np.count_nonzero(hierarchy[0][:, 3] == 0) - 1), 0)
+      else:
+         holes = 0
       x = stats[i, cv.CC_STAT_LEFT]
       y = stats[i, cv.CC_STAT_TOP]
       w = stats[i, cv.CC_STAT_WIDTH]
       h = stats[i, cv.CC_STAT_HEIGHT]
       area = stats[i, cv.CC_STAT_AREA]
-      M_area = area
-      m_area = area
-      obj_M_area = i
-      obj_m_area = i
+      
       if(area < m_area):
          m_area = area
          obj_m_area = i
       elif(area > M_area):
          M_area = area
          obj_M_area = i
-      cv.rectangle(img_copy, (x, y), (x + w, y + h), (0, 255, 255), 3)
-      cv.putText(img_copy, ".", (int(cx), int(cy)), cv.FONT_HERSHEY_DUPLEX, 1, (255, 0, 255), 12)
-      cv.putText(img_copy, f"A:{area}", (int(cx), int(cy)-50), cv.FONT_HERSHEY_COMPLEX, 1, (255, 255, 0), 0)
-      cv.putText(img_copy, f"P: {perimetro}", (int(cx), int(cy)-100), cv.FONT_HERSHEY_COMPLEX , 1, (255, 255, 0), 0)
-   ##plot_two_images(img_copy, gray)    
-   return(num_labels-1)
+      x_M_area = stats[obj_M_area, cv.CC_STAT_LEFT]
+      y_M_area = stats[obj_M_area, cv.CC_STAT_TOP]
+      w_M_area = stats[obj_M_area, cv.CC_STAT_WIDTH]
+      h_M_area = stats[obj_M_area, cv.CC_STAT_HEIGHT]
+      x_m_area = stats[obj_m_area, cv.CC_STAT_LEFT]
+      y_m_area = stats[obj_m_area, cv.CC_STAT_TOP]
+      w_m_area = stats[obj_m_area, cv.CC_STAT_WIDTH]
+      h_m_area = stats[obj_m_area, cv.CC_STAT_HEIGHT]
+      objects_info.append({
+         "id": int(i),
+         "area": int(area),
+         "perimeter": float(perimetro),
+         "centroid": (int(cx), int(cy)),
+         "bbox": (int(x), int(y), int(w), int(h)),
+         "holes": holes,
+         "is_round": bool(is_round)
+      })
+      cv.rectangle(img_copy, (x, y), (x + w, y + h), (255, 255, 255), 3)
+      cv.putText(img_copy, f'.{i}', (int(cx), int(cy)), cv.FONT_HERSHEY_COMPLEX, 0.5, (255, 0, 255), 1)
+   cv.rectangle(img_copy, (x_M_area, y_M_area), (x_M_area+ w_M_area, y_M_area + h_M_area), (255, 0, 0), 3)
+   cv.rectangle(img_copy, (x_m_area, y_m_area), (x_m_area+ w_m_area, y_m_area + h_m_area), (0, 0, 255), 3)
+   return(img_copy, num_labels-1, objects_info, round_count)
 
 
 def Red_obj(img):
@@ -72,7 +100,7 @@ def Red_obj(img):
    ## aplicamos a máscara para extrair a cor
    result = cv.bitwise_and(img_HSV, img_HSV, mask=red_mask)
    ## cv.imshow("img",result)
-   return (count_objects(result))
+   return (count_objects(result)[1])
 
 
 def Blue_obj(img):
@@ -90,7 +118,7 @@ def Blue_obj(img):
    ##aplicamos a máscara para extrair a cor
    result = cv.bitwise_and(img_HSV, img_HSV, mask=blue_mask)
    ##cv.imshow("img",result)
-   return (count_objects(result))
+   return (count_objects(result)[1])
 
 def White_obj(img):
    img_HSV = cv.cvtColor(img, cv.COLOR_BGR2HSV) ##passa a para HSV a imagem 
@@ -107,13 +135,41 @@ def White_obj(img):
    ##aplicamos a máscara para extrair a cor
    result = cv.bitwise_and(img_HSV, img_HSV, mask=white_mask)
    ##cv.imshow("img",result)
-   return (count_objects(result))
+   return (count_objects(result)[1])
 
 def Round_obj(img):
    gray2 = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
    gray2 = cv.medianBlur(gray2, 5)
    circles = cv.HoughCircles(gray2, cv.HOUGH_GRADIENT_ALT, 1, 20, 50, 30, 0, 0)
    return(len(circles))
+
+def build_objects_table(objects_info):
+   if not objects_info:
+      return "Nenhum objeto identificado."
+   header = (
+      f"{'ID':<5}"
+      f"{'Area':<12}"
+      f"{'Perimetro':<15}"
+      f"{'Furos':<8}"
+      f"{'Redondo':<10}"
+      f"{'Centroide (x,y)':<20}"
+      f"{'BBox (x,y,w,h)':<22}"
+   )
+   separator = "-" * len(header)
+   lines = [header, separator]
+   for obj in objects_info:
+      cx, cy = obj["centroid"]
+      x, y, w, h = obj["bbox"]
+      lines.append(
+         f"{obj['id']:<5}"
+         f"{obj['area']:<12}"
+         f"{obj['perimeter']:<15.2f}"
+         f"{obj.get('holes', 0):<8}"
+         f"{'sim' if obj.get('is_round') else 'nao':<10}"
+         f"{f'({cx},{cy})':<20}"
+         f"{f'({x},{y},{w},{h})':<22}"
+      )
+   return "\n".join(lines)
 
 
 def plot_two_images(img,img2): ## função para plotar duas imagens lado a lado
@@ -122,7 +178,7 @@ def plot_two_images(img,img2): ## função para plotar duas imagens lado a lado
    plt.title('Imagem Original') ## Adiciona um título à imagem
    plt.axis('off') ## Remove os eixos da imagem
    plt.subplot(122) ## Seleciona a segunda subplot
-   plt.imshow(img2, cmap='grey') ## Mostra a imagem com o objeto encontrado
+   plt.imshow(img2) ## Mostra a imagem com o objeto encontrado
    plt.title('Objeto Encontrado') ## Adiciona um título à imagem
    plt.axis('off') ## Remove os eixos da imagem
    plt.show() ## Exibe as duas imagens lado a lado
@@ -137,11 +193,10 @@ def folder(folder): ## função para processar uma pasta de imagens
       file(img)
 
 def file(img): ## função para processar um ficheiro de imagem
-   pecas_totais = count_objects(img)  ## chama a função para encontrar o objeto na imagem
+   img_obj_found, pecas_totais, objects_info, pecas_redondas = count_objects(img)  ## chama a função para encontrar o objeto na imagem
    pecas_vermelhas = Red_obj(img)
    pecas_azuis = Blue_obj(img)
    pecas_brancas = White_obj(img)
-   pecas_redondas =Round_obj(img)
    img_caracteristics = Image.new('RGB', (800, 600), color=(255, 255, 2555))
    img_caracteristics.save = ("Caractwerisitcas.png", 'PNG')
    img2 = np.array(img_caracteristics)
@@ -151,7 +206,9 @@ def file(img): ## função para processar um ficheiro de imagem
    cv.putText(img2,"pecas brancas:" + str(pecas_brancas), (0, 350),cv.FONT_HERSHEY_COMPLEX,1,(0, 0, 0), 1)
    cv.putText(img2,"pecas redondas:" + str(pecas_redondas), (0, 430),cv.FONT_HERSHEY_COMPLEX,1,(0, 0, 0), 1)
    cv.putText(img2,"pecas nao defenidas:" + str(pecas_naodefinidas), (0, 510),cv.FONT_HERSHEY_COMPLEX,1,(0, 0, 0), 1)
-   plot_two_images(img, img2)
+   print("\nTabela de objetos (extraída de count_objects):")
+   print(build_objects_table(objects_info))
+   plot_two_images(img_obj_found, img2)
    ##print("peças_totais:" + str(pecas_totais) +'\n' +"peças_vermelhas:" + str(pecas_vermelhas)+'\n' + "peças_azuis:" + str(pecas_azuis) + '\n' + "peças_bramcas:" + str(pecas_brancas) + '\n' + "peças_não_defenidas:" + str(pecas_naodefinidas))
 
 
