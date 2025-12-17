@@ -134,9 +134,7 @@ def folder(folder): ## função para processar uma pasta de imagens
    for filename in os.listdir(folder): ## itera sobre todos os ficheiros na pasta
       route = os.path.join(folder,filename) ## cria o caminho completo do ficheiro
       img = cv.imread(route)  ## lê a imagem 
-      img_with_obj = count_objects(img)  ## chama a função para encontrar o objeto na imagem
-      ##plot_two_images(img, img_with_obj)  ## plota as duas imagens lado a lado
-
+      file(img)
 
 def file(img): ## função para processar um ficheiro de imagem
    pecas_totais = count_objects(img)  ## chama a função para encontrar o objeto na imagem
