@@ -21,13 +21,10 @@ def count_objects(img): ## função para contar o número de objetos
    img_copy = img.copy()
    gray = cv.cvtColor(img_copy, cv.COLOR_BGR2GRAY) ## passa imagem para tons de cizento
    gray = cv.GaussianBlur(gray,(5,5), 0) ## aplicamos a função para suavizar a imagem
-   gray_for_circles = cv.medianBlur(gray, 5)  ## suaviza para detetar círculos
    img_bw = cv.threshold(gray, 50, 255, cv.THRESH_BINARY, cv.THRESH_OTSU)[1] ## aplica um treshold à imagem
    kernel = np.ones((5,5), np.uint8) ## criação de um kernel 
-   img_bw = cv.morphologyEx(img_bw, cv.MORPH_ERODE, kernel) ## aplica por úçtimo uma erosão á imagem 
-   circles = cv.HoughCircles(gray_for_circles, cv.HOUGH_GRADIENT_ALT, 1, 20, 50, 30, 0, 0)
-   round_count = 0 if circles is None else len(circles[0])
-   num_labels, labels, stats, centroids = cv.connectedComponentsWithStats(img_bw, 8, cv.CV_32S)
+   img_bw = cv.morphologyEx(img_bw, cv.MORPH_ERODE, kernel) ## aplica por último uma erosão á imagem 
+   num_labels, labels, stats, centroids = cv.connectedComponentsWithStats(img_bw, 8, cv.CV_32S) 
    objects_info = []
    M_area = 0
    m_area = float("inf")
