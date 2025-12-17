@@ -33,6 +33,15 @@ def count_objects(img): ## função para contar o número de objetos
    m_area = float("inf")
    obj_M_area = 1
    obj_m_area = 1
+   x_M_area = 0
+   y_M_area = 0
+   x_m_area = 0
+   y_m_area = 0
+   w_M_area = 0
+   h_M_area = 0
+   w_m_area = 0
+   h_m_area = 0
+   round_count = 0
    for i in range(1, num_labels):
       (cx,cy) = centroids[i]
       mask = (labels == i).astype(np.uint8) * 255
@@ -43,7 +52,9 @@ def count_objects(img): ## função para contar o número de objetos
       is_round = False
       if perimetro > 0:
          circularity = (4 * np.pi * area) / (perimetro ** 2)
-         is_round = circularity >= 0.75
+         if circularity >= 0.9:
+            is_round = True
+            round_count += 1
       if hierarchy is not None and len(hierarchy) > 0:
          # holes are child contours of the outer contour (parent == 0)
          holes = max(int(np.count_nonzero(hierarchy[0][:, 3] == 0) - 1), 0)
@@ -179,7 +190,7 @@ def plot_two_images(img,img2): ## função para plotar duas imagens lado a lado
    plt.axis('off') ## Remove os eixos da imagem
    plt.subplot(122) ## Seleciona a segunda subplot
    plt.imshow(img2) ## Mostra a imagem com o objeto encontrado
-   plt.title('Objeto Encontrado') ## Adiciona um título à imagem
+   plt.title('Caracteristicas Imagem') ## Adiciona um título à imagem
    plt.axis('off') ## Remove os eixos da imagem
    plt.show() ## Exibe as duas imagens lado a lado
    cv.waitKey(0)
